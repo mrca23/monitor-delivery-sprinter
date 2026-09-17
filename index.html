@@ -103,10 +103,10 @@
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
-<script src="report.js"></script>
+<script src="report.js?v=2"></script>
 <script>
   const $ = id => document.getElementById(id);
-  const fmt = n => n.toLocaleString('id-ID');
+  const fmt = n => (Number(n) || 0).toLocaleString('id-ID');
   let unduhan = null;
 
   function status(teks, jenis) { $('status').textContent = teks; $('status').className = 'status ' + (jenis || ''); }
@@ -142,6 +142,7 @@
     try {
       const buf = await file.arrayBuffer();
       const r = await MDReport.proses(ExcelJS, buf, file.name);
+      if (!('noBm' in r.hasil.total)) throw new Error('Versi tool di browser masih lama. Tekan Ctrl+F5 lalu coba lagi.');
       unduhan = r;
       tampil(r.hasil);
       status('Selesai. Klik "Download Excel" untuk menyimpan ' + r.namaFile + '.', 'ok');

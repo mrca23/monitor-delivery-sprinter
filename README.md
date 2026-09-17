@@ -36,7 +36,7 @@ Hasil disimpan di folder `output/` (dibuat otomatis di sebelah folder `python/`)
 
 ## Struktur
 - `index.html` - halaman web
-- `report.js` - logika perhitungan & pembuatan Excel (browser dan Node)
+- `report.js` - logika (setiap diubah, naikkan `?v=` di index.html) perhitungan & pembuatan Excel (browser dan Node)
 - `python/report_sprinter.py` - versi Python dengan hasil yang sama
 
 **Jangan commit file data (.xlsx)** - berisi data pelanggan. Sudah diblokir di `.gitignore`.
