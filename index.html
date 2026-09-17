@@ -49,6 +49,10 @@
   td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
   td.merah { background: var(--warn-bg); font-weight: 600; }
   tr.total td { background: var(--total-bg); font-weight: 700; }
+  .judul-kecil { font-size: 17px; margin: 0 0 10px; }
+  .langkah { margin: 0; padding-left: 22px; }
+  .langkah li { margin-bottom: 6px; }
+  .catatan { font-size: 14px; color: var(--muted); margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
   details { font-size: 14px; }
   details summary { cursor: pointer; font-weight: 600; }
   details ul { color: var(--muted); padding-left: 20px; margin: 10px 0 0; }
@@ -60,7 +64,21 @@
 <body>
 <main>
   <h1>Report Sprinter Delivery</h1>
-  <p class="sub">Rekap per sprinter dari export JMS <em>Monitor Delivery (Refine)(Detail)</em>: total delivery, TTD, serta AWB yang sudah dan belum scan bermasalah / scan inventori.</p>
+  <p class="sub">Cara tarik data: <b>JMS &rsaquo; MONITOR &rsaquo; MONITOR DELIVERY (REFINE)</b></p>
+
+  <section class="card">
+    <h2 class="judul-kecil">Cara pakai</h2>
+    <ol class="langkah">
+      <li>Buka JMS, masuk menu <b>MONITOR &rsaquo; MONITOR DELIVERY (REFINE)</b>.</li>
+      <li>Pilih tanggal delivery dan DP yang ingin direkap, lalu export data <b>Detail</b> ke Excel (.xlsx).</li>
+      <li>Di halaman ini, klik <b>Pilih File</b> (atau tarik file ke kotak di bawah) dan pilih file hasil export tadi.</li>
+      <li>Tunggu beberapa detik. Rekap per sprinter muncul di layar: total delivery, TTD, scan bermasalah, dan scan inventori.</li>
+      <li>Klik <b>Download Excel</b> untuk menyimpan report lengkap.</li>
+    </ol>
+    <p class="catatan">Membaca hasil: AWB yang tidak TTD (Total Delivery - Total TTD) <b>wajib scan bermasalah dan wajib scan inventori</b>.
+      Angka merah di kolom <b>Tidak Scan Bermasalah</b> atau <b>Tidak Scan Inventori</b> berarti ada AWB yang belum di-scan oleh sprinter tersebut.
+      Daftar AWB-nya ada di sheet <b>AWB Tidak Scan Bermasalah</b> dan <b>AWB Tidak Scan Inventori</b> pada file Excel. Kolom Keterangan dibiarkan kosong untuk diisi manual.</p>
+  </section>
 
   <section class="card">
     <div class="drop" id="drop">

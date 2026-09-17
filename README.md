@@ -4,6 +4,14 @@ Tool untuk membuat report per sprinter dari export JMS **Monitor Delivery (Refin
 
 **Pakai online:** https://mrca23.github.io/monitor-delivery-sprinter/
 
+## Cara tarik data
+JMS > MONITOR > MONITOR DELIVERY (REFINE) > export Detail (.xlsx)
+
+## Cara pakai
+1. Buka link di atas, klik **Pilih File** (atau tarik file ke kotak upload).
+2. Pilih file export Monitor Delivery (Refine)(Detail).
+3. Rekap per sprinter tampil di layar, klik **Download Excel** untuk menyimpan report.
+
 File diolah langsung di browser (pakai [ExcelJS](https://github.com/exceljs/exceljs)). Tidak ada data yang dikirim ke server.
 
 ## Isi report
