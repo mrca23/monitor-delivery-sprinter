@@ -23,11 +23,13 @@
   h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
   .sub { color: var(--muted); margin: 0 0 24px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  .drop { display: block; border: 2px dashed var(--line); border-radius: 10px; padding: 32px 16px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+  .drop { position: relative; display: block; border: 2px dashed var(--line); border-radius: 10px; padding: 32px 16px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
   .drop:hover, .drop.aktif { border-color: var(--accent); background: var(--accent-soft); }
   .drop strong { display: block; font-size: 16px; margin-bottom: 4px; }
   .drop span { color: var(--muted); font-size: 14px; }
-  input[type=file] { display: none; }
+  .drop input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
+  .pilih { display: inline-block; margin-top: 14px; background: var(--accent); color: #fff; font-weight: 600; border-radius: 8px; padding: 9px 18px; }
+  .drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
   .privasi { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
   .status { margin: 14px 0 0; font-size: 14px; min-height: 21px; }
   .status.error { color: var(--accent); }
@@ -61,11 +63,12 @@
   <p class="sub">Rekap per sprinter dari export JMS <em>Monitor Delivery (Refine)(Detail)</em>: total delivery, TTD, scan bermasalah, scan inventori, dan AWB tidak scan inventori.</p>
 
   <section class="card">
-    <label class="drop" id="drop" for="file">
+    <div class="drop" id="drop">
       <strong>Pilih atau tarik file .xlsx ke sini</strong>
-      <span>File export Monitor Delivery (Refine)(Detail)</span>
-    </label>
-    <input type="file" id="file" accept=".xlsx">
+      <span>File export Monitor Delivery (Refine)(Detail)</span><br>
+      <span class="pilih">Pilih File</span>
+      <input type="file" id="file" aria-label="Pilih file Monitor Delivery .xlsx" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+    </div>
     <p class="privasi">File diolah langsung di browser Anda. Tidak ada data yang dikirim ke server.</p>
     <p class="status" id="status" role="status"></p>
   </section>
@@ -145,7 +148,7 @@
     }
   }
 
-  $('file').addEventListener('change', e => olah(e.target.files[0]));
+  $('file').addEventListener('change', e => { olah(e.target.files[0]); e.target.value = ''; });
   const drop = $('drop');
   ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('aktif'); }));
   ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('aktif'); }));
