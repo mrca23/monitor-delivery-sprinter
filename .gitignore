@@ -1,0 +1,9 @@
+# Data operasional berisi data pelanggan - jangan pernah di-commit
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+input/
+output/
+node_modules/
+__pycache__/
