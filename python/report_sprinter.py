@@ -61,7 +61,9 @@ defs = pd.DataFrame({'Kolom': ['Total Delivery', 'Total TTD', 'Wajib Scan', 'Tot
                  '%s | Tanggal delivery: %s' % (os.path.basename(src), ', '.join(sorted({str(t) for t in tgl})))]})
 
 os.makedirs(os.path.join(BASE, 'output'), exist_ok=True)
-out = os.path.join(BASE, 'output', 'report_sprinter_%s.xlsx' % min(tgl).strftime('%Y%m%d'))
+dp_list = sorted(d['DP Delivery'].dropna().astype(str).unique())
+label_dp = ' & '.join(dp_list) if len(dp_list) <= 2 else 'GABUNGAN %d DP' % len(dp_list)
+out = os.path.join(BASE, 'output', 'Report Delivery, Scan Bermasalah dan Inventori %s %s.xlsx' % (label_dp, min(tgl)))
 with pd.ExcelWriter(out, engine='openpyxl') as w:
     r.to_excel(w, sheet_name='Report Sprinter', index=False)
     det_nobm.to_excel(w, sheet_name='AWB Tidak Scan Bermasalah', index=False)

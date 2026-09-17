@@ -49,6 +49,7 @@
   td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
   td.merah { background: var(--warn-bg); font-weight: 600; }
   tr.total td { background: var(--total-bg); font-weight: 700; }
+  .sapaan { font-size: 20px; margin: 20px 0 10px; color: var(--accent); }
   .judul-kecil { font-size: 17px; margin: 0 0 10px; }
   .langkah { margin: 0; padding-left: 22px; }
   .langkah li { margin-bottom: 6px; }
@@ -91,6 +92,8 @@
     <p class="status" id="status" role="status"></p>
   </section>
 
+  <h2 class="sapaan" id="sapaan" hidden></h2>
+
   <section class="card" id="hasil" hidden>
     <div class="baris">
       <h2 id="judul">Hasil</h2>
@@ -121,7 +124,7 @@
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
-<script src="report.js?v=2"></script>
+<script src="report.js?v=3"></script>
 <script>
   const $ = id => document.getElementById(id);
   const fmt = n => (Number(n) || 0).toLocaleString('id-ID');
@@ -133,6 +136,8 @@
 
   function tampil(hasil) {
     const t = hasil.total;
+    $('sapaan').textContent = 'Hi, Tim ' + MDReport.labelDp(hasil.dp);
+    $('sapaan').hidden = false;
     $('judul').textContent = 'Hasil: ' + hasil.rep.length + ' sprinter, delivery ' + hasil.tgl.join(', ');
     $('kpi').innerHTML = [
       ['Total Delivery', t.del], ['Total TTD', t.ttd], ['Scan Bermasalah', t.bm], ['Tidak Scan Bermasalah', t.noBm],
@@ -155,7 +160,7 @@
   async function olah(file) {
     if (!file) return;
     if (!/\.xlsx$/i.test(file.name)) { status('Format harus .xlsx', 'error'); return; }
-    $('hasil').hidden = true;
+    $('hasil').hidden = true; $('sapaan').hidden = true;
     status('Memproses ' + file.name + ' ...');
     try {
       const buf = await file.arrayBuffer();

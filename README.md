@@ -12,6 +12,8 @@ JMS > MONITOR > MONITOR DELIVERY (REFINE) > export Detail (.xlsx)
 2. Pilih file export Monitor Delivery (Refine)(Detail).
 3. Rekap per sprinter tampil di layar, klik **Download Excel** untuk menyimpan report.
 
+DP dideteksi otomatis dari kolom `DP Delivery`. Nama file hasil: `Report Delivery, Scan Bermasalah dan Inventori <DP> <tanggal>.xlsx`, dan di layar muncul sapaan `Hi, Tim <DP>`.
+
 File diolah langsung di browser (pakai [ExcelJS](https://github.com/exceljs/exceljs)). Tidak ada data yang dikirim ke server.
 
 ## Isi report

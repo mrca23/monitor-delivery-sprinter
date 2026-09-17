@@ -28,6 +28,12 @@
     ? d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate())
     : String(d).slice(0, 10);
 
+  // Nama DP untuk judul & nama file; lebih dari 2 DP diringkas jadi GABUNGAN
+  function labelDp(dp) {
+    if (!dp || !dp.length) return 'DP';
+    return dp.length <= 2 ? dp.join(' & ') : 'GABUNGAN ' + dp.length + ' DP';
+  }
+
   function bacaBaris(ws) {
     const header = {};
     ws.getRow(1).eachCell((c, i) => { const h = nilai(c.value); if (h !== null) header[String(h).trim()] = i; });
@@ -71,7 +77,8 @@
     kunci.forEach(k => { total[k] = rep.reduce((n, g) => n + g[k], 0); });
     const urut = (a, b) => cmp(String(a.nama), String(b.nama)) || cmp(+a.waktuDel, +b.waktuDel);
     const tgl = [...new Set(rows.map(o => tglStr(o.waktuDel)))].sort();
-    return { rep, total, noInv: rows.filter(o => o.fGagalNoInv).sort(urut), noBm: rows.filter(o => o.fGagalNoBm).sort(urut), tgl };
+    const dp = [...new Set(rows.map(o => String(o.dp)))].sort();   // DP terdeteksi dari file
+    return { rep, total, dp, noInv: rows.filter(o => o.fGagalNoInv).sort(urut), noBm: rows.filter(o => o.fGagalNoBm).sort(urut), tgl };
   }
 
   function buatWorkbook(ExcelJS, hasil, namaSumber) {
@@ -158,11 +165,11 @@
     const hasil = hitung(rows);
     const wb = buatWorkbook(ExcelJS, hasil, namaSumber);
     const out = await wb.xlsx.writeBuffer();
-    const namaFile = 'report_sprinter_' + hasil.tgl[0].replace(/-/g, '') + '.xlsx';
+    const namaFile = 'Report Delivery, Scan Bermasalah dan Inventori ' + labelDp(hasil.dp) + ' ' + hasil.tgl[0] + '.xlsx';
     return { hasil, out, namaFile };
   }
 
-  const api = { proses, hitung, bacaBaris };
+  const api = { proses, hitung, bacaBaris, labelDp };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MDReport = api;
 })(this);
