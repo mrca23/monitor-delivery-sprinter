@@ -13,12 +13,16 @@ Sheet **Report Sprinter** (per DP & sprinter):
 |---|---|
 | Total Delivery | Jumlah AWB yang di-scan delivery oleh sprinter |
 | Total TTD | AWB TTD oleh penerima (Waktu TTD ada & TTD Retur = 0). TTD Retur = 1 tidak dihitung (TTD retur di pengirim) |
-| Total Scan Bermasalah | AWB yang punya Waktu Paket Bermasalah |
-| Total Scan Inventori | AWB yang punya Waktu Scan Inventory |
-| Total AWB Tidak Scan Inventori | AWB tidak TTD (retur / belum TTD) tanpa scan inventori |
+| Total Scan Bermasalah | AWB wajib scan yang punya Waktu Paket Bermasalah |
+| Total AWB Tidak Scan Bermasalah | AWB wajib scan tanpa Waktu Paket Bermasalah |
+| Total Scan Inventori | AWB wajib scan yang punya Waktu Scan Inventory |
+| Total AWB Tidak Scan Inventori | AWB wajib scan tanpa Waktu Scan Inventory |
 | Keterangan | Kosong, untuk diisi manual |
 
-Sheet lain: **AWB Tidak Scan Inventori**, **AWB Gagal Tanpa Bermasalah**, **Definisi**.
+**Wajib scan** = Total Delivery - Total TTD (wajib scan bermasalah & scan inventori).
+Scan + Tidak Scan selalu sama dengan Total Delivery - Total TTD.
+
+Sheet lain: **AWB Tidak Scan Bermasalah**, **AWB Tidak Scan Inventori**, **Definisi**.
 
 ## Kolom wajib di file input
 `No. Waybill`, `DP Delivery`, `Waktu Delivery`, `Kode Sprinter`, `Sprinter Delivery`, `Waktu Scan Inventory`, `Waktu Paket Bermasalah`, `Waktu TTD`, `TTD Retur`

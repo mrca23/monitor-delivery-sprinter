@@ -19,37 +19,26 @@ d['F_GAGAL_NO_INV'] = d['F_GAGAL'] & ~d['F_INVENTORI']               # gagal kir
 d['F_GAGAL_NO_BM'] = d['F_GAGAL'] & ~d['F_BERMASALAH']               # gagal kirim tanpa scan bermasalah
 
 tgl = pd.to_datetime(d['Waktu Delivery']).dt.date
+# Wajib scan = AWB tidak TTD (Total Delivery - Total TTD): wajib scan bermasalah & wajib scan inventori
+d['F_GAGAL_BM'] = d['F_GAGAL'] & d['F_BERMASALAH']
+d['F_GAGAL_INV'] = d['F_GAGAL'] & d['F_INVENTORI']
 g = d.groupby(['DP Delivery', 'Kode Sprinter', 'Sprinter Delivery'])
 r = pd.DataFrame({
     'Total Delivery': g.size(),
     'Total TTD': g['F_TTD'].sum(),
-    'Total Scan Bermasalah': g['F_BERMASALAH'].sum(),
-    'Total Scan Inventori': g['F_INVENTORI'].sum(),
+    'Total Scan Bermasalah': g['F_GAGAL_BM'].sum(),
+    'Total AWB Tidak Scan Bermasalah': g['F_GAGAL_NO_BM'].sum(),
+    'Total Scan Inventori': g['F_GAGAL_INV'].sum(),
     'Total AWB Tidak Scan Inventori': g['F_GAGAL_NO_INV'].sum(),
-    '_gagal': g['F_GAGAL'].sum(),
-    '_nobm': g['F_GAGAL_NO_BM'].sum(),
 }).reset_index()
-r['% TTD'] = r['Total TTD'] / r['Total Delivery']
-
-def ket(x):
-    k = []
-    p = x['% TTD']
-    k.append('TTD %.1f%%' % (p * 100) + (' (rendah)' if p < 0.3 else ''))
-    if x['Total AWB Tidak Scan Inventori'] > 0:
-        k.append('%d AWB gagal kirim tidak scan inventori' % x['Total AWB Tidak Scan Inventori'])
-    if x['_nobm'] > 0:
-        k.append('%d AWB gagal kirim tanpa scan bermasalah' % x['_nobm'])
-    if x['Total AWB Tidak Scan Inventori'] == 0 and x['_nobm'] == 0:
-        k.append('Semua AWB gagal kirim sudah scan bermasalah & inventori' if x['_gagal'] else 'Semua AWB TTD')
-    return '; '.join(k)
 r['Keterangan'] = ''
-r = r.sort_values(['DP Delivery', 'Total Delivery'], ascending=[True, False]).drop(columns=['_gagal', '_nobm'])
+r = r.sort_values(['DP Delivery', 'Total Delivery'], ascending=[True, False])
 r.insert(0, 'No', range(1, len(r) + 1))
 
-cols_num = ['Total Delivery', 'Total TTD', 'Total Scan Bermasalah', 'Total Scan Inventori', 'Total AWB Tidak Scan Inventori']
+cols_num = ['Total Delivery', 'Total TTD', 'Total Scan Bermasalah', 'Total AWB Tidak Scan Bermasalah',
+            'Total Scan Inventori', 'Total AWB Tidak Scan Inventori']
 tot = {c: r[c].sum() for c in cols_num}
-tot.update({'No': '', 'DP Delivery': 'TOTAL', 'Kode Sprinter': '', 'Sprinter Delivery': '',
-            'Keterangan': ''})
+tot.update({'No': '', 'DP Delivery': 'TOTAL', 'Kode Sprinter': '', 'Sprinter Delivery': '', 'Keterangan': ''})
 r = pd.concat([r, pd.DataFrame([tot])], ignore_index=True)
 r = r[['No', 'DP Delivery', 'Kode Sprinter', 'Sprinter Delivery'] + cols_num + ['Keterangan']]
 
@@ -59,21 +48,24 @@ detail_cols = ['No. Waybill', 'DP Delivery', 'Kode Sprinter', 'Sprinter Delivery
 det = d[d['F_GAGAL_NO_INV']][detail_cols].sort_values(['Sprinter Delivery', 'Waktu Delivery'])
 det_nobm = d[d['F_GAGAL_NO_BM']][detail_cols].sort_values(['Sprinter Delivery', 'Waktu Delivery'])
 
-defs = pd.DataFrame({'Kolom': ['Total Delivery', 'Total TTD', 'Total Scan Bermasalah', 'Total Scan Inventori',
+defs = pd.DataFrame({'Kolom': ['Total Delivery', 'Total TTD', 'Wajib Scan', 'Total Scan Bermasalah',
+                               'Total AWB Tidak Scan Bermasalah', 'Total Scan Inventori',
                                'Total AWB Tidak Scan Inventori', 'Sumber'],
     'Definisi': ['Jumlah AWB yang di-scan delivery oleh sprinter',
                  'AWB TTD oleh penerima (Waktu TTD ada & TTD Retur = 0). TTD Retur = 1 tidak dihitung (itu TTD retur di pengirim)',
-                 'AWB yang punya Waktu Paket Bermasalah',
-                 'AWB yang punya Waktu Scan Inventory',
-                 'AWB tidak TTD (retur / belum TTD) yang TIDAK punya scan inventori (seharusnya kembali ke gudang & di-scan inventori)',
+                 'Total Delivery - Total TTD = AWB yang wajib scan bermasalah dan wajib scan inventori',
+                 'AWB wajib scan yang punya Waktu Paket Bermasalah',
+                 'AWB wajib scan yang TIDAK punya Waktu Paket Bermasalah (Scan Bermasalah + Tidak Scan Bermasalah = Delivery - TTD)',
+                 'AWB wajib scan yang punya Waktu Scan Inventory',
+                 'AWB wajib scan yang TIDAK punya Waktu Scan Inventory (Scan Inventori + Tidak Scan Inventori = Delivery - TTD)',
                  '%s | Tanggal delivery: %s' % (os.path.basename(src), ', '.join(sorted({str(t) for t in tgl})))]})
 
 os.makedirs(os.path.join(BASE, 'output'), exist_ok=True)
 out = os.path.join(BASE, 'output', 'report_sprinter_%s.xlsx' % min(tgl).strftime('%Y%m%d'))
 with pd.ExcelWriter(out, engine='openpyxl') as w:
     r.to_excel(w, sheet_name='Report Sprinter', index=False)
+    det_nobm.to_excel(w, sheet_name='AWB Tidak Scan Bermasalah', index=False)
     det.to_excel(w, sheet_name='AWB Tidak Scan Inventori', index=False)
-    det_nobm.to_excel(w, sheet_name='AWB Gagal Tanpa Bermasalah', index=False)
     defs.to_excel(w, sheet_name='Definisi', index=False)
 
 wb = load_workbook(out)
@@ -92,13 +84,14 @@ for ws in wb.worksheets:
     ws.freeze_panes = 'A2'; ws.row_dimensions[1].height = 32
 ws = wb['Report Sprinter']
 for row in ws.iter_rows(min_row=2):
-    if row[8].value and row[8].value > 0 and row[1].value != 'TOTAL':
-        row[8].fill = PatternFill('solid', fgColor='FFC7CE')
+    for k in (7, 9):
+        if row[k].value and row[k].value > 0 and row[1].value != 'TOTAL':
+            row[k].fill = PatternFill('solid', fgColor='FFC7CE')
 last = ws.max_row
 for c in ws[last]:
     c.font = Font(bold=True); c.fill = PatternFill('solid', fgColor='FFF2CC')
-ws.column_dimensions['J'].width = 40
-for c in ws['J'][1:]:
+ws.column_dimensions['K'].width = 40
+for c in ws['K'][1:]:
     c.alignment = Alignment(wrap_text=True, vertical='top')
 wb['Definisi'].column_dimensions['B'].width = 110
 wb.save(out)

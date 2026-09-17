@@ -52,22 +52,23 @@
       o.fTtd = Number(o.ttdRetur) === 0 && ada(o.ttd);   // TTD Retur = 1 adalah TTD retur di pengirim
       o.fBm = ada(o.bm);
       o.fInv = ada(o.inv);
-      o.fGagal = !o.fTtd;
+      o.fGagal = !o.fTtd;                                 // wajib scan bermasalah & inventori
       o.fGagalNoInv = o.fGagal && !o.fInv;
       o.fGagalNoBm = o.fGagal && !o.fBm;
     }
     const grup = new Map();
     for (const o of rows) {
       const key = JSON.stringify([String(o.dp), String(o.kode), String(o.nama)]);
-      if (!grup.has(key)) grup.set(key, { dp: String(o.dp), kode: String(o.kode), nama: String(o.nama), del: 0, ttd: 0, bm: 0, inv: 0, noInv: 0 });
+      if (!grup.has(key)) grup.set(key, { dp: String(o.dp), kode: String(o.kode), nama: String(o.nama), del: 0, ttd: 0, bm: 0, noBm: 0, inv: 0, noInv: 0 });
       const g = grup.get(key);
-      g.del++; g.ttd += o.fTtd; g.bm += o.fBm; g.inv += o.fInv; g.noInv += o.fGagalNoInv;
+      g.del++; g.ttd += o.fTtd; g.bm += o.fGagal && o.fBm; g.noBm += o.fGagalNoBm; g.inv += o.fGagal && o.fInv; g.noInv += o.fGagalNoInv;
     }
     const rep = [...grup.values()]
       .sort((a, b) => cmp(a.dp, b.dp) || cmp(a.kode, b.kode) || cmp(a.nama, b.nama))
       .sort((a, b) => cmp(a.dp, b.dp) || b.del - a.del);
-    const total = rep.reduce((t, g) => ({ del: t.del + g.del, ttd: t.ttd + g.ttd, bm: t.bm + g.bm, inv: t.inv + g.inv, noInv: t.noInv + g.noInv }),
-      { del: 0, ttd: 0, bm: 0, inv: 0, noInv: 0 });
+    const kunci = ['del', 'ttd', 'bm', 'noBm', 'inv', 'noInv'];
+    const total = {};
+    kunci.forEach(k => { total[k] = rep.reduce((n, g) => n + g[k], 0); });
     const urut = (a, b) => cmp(String(a.nama), String(b.nama)) || cmp(+a.waktuDel, +b.waktuDel);
     const tgl = [...new Set(rows.map(o => tglStr(o.waktuDel)))].sort();
     return { rep, total, noInv: rows.filter(o => o.fGagalNoInv).sort(urut), noBm: rows.filter(o => o.fGagalNoBm).sort(urut), tgl };
@@ -105,22 +106,24 @@
     }
 
     const hRep = ['No', 'DP Delivery', 'Kode Sprinter', 'Sprinter Delivery', 'Total Delivery', 'Total TTD',
-      'Total Scan Bermasalah', 'Total Scan Inventori', 'Total AWB Tidak Scan Inventori', 'Keterangan'];
-    const dRep = hasil.rep.map((g, i) => [i + 1, g.dp, g.kode, g.nama, g.del, g.ttd, g.bm, g.inv, g.noInv, '']);
+      'Total Scan Bermasalah', 'Total AWB Tidak Scan Bermasalah', 'Total Scan Inventori', 'Total AWB Tidak Scan Inventori', 'Keterangan'];
+    const dRep = hasil.rep.map((g, i) => [i + 1, g.dp, g.kode, g.nama, g.del, g.ttd, g.bm, g.noBm, g.inv, g.noInv, '']);
     const t = hasil.total;
-    dRep.push(['', 'TOTAL', '', '', t.del, t.ttd, t.bm, t.inv, t.noInv, '']);
-    const ws = sheet('Report Sprinter', hRep, dRep, { 9: 40 });
+    dRep.push(['', 'TOTAL', '', '', t.del, t.ttd, t.bm, t.noBm, t.inv, t.noInv, '']);
+    const ws = sheet('Report Sprinter', hRep, dRep, { 10: 40 });
     ws.eachRow((row, r) => {
       if (r === 1) return;
-      row.getCell(10).alignment = { wrapText: true, vertical: 'top' };
+      row.getCell(11).alignment = { wrapText: true, vertical: 'top' };
       if (r === ws.rowCount) {
         for (let i = 1; i <= hRep.length; i++) {
           const c = row.getCell(i);
           c.font = { bold: true };
           c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF2CC' } };
         }
-      } else if (row.getCell(9).value > 0) {
-        row.getCell(9).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } };
+      } else {
+        [8, 10].forEach(k => {
+          if (row.getCell(k).value > 0) row.getCell(k).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } };
+        });
       }
     });
 
@@ -128,15 +131,17 @@
       'Waktu Paket Bermasalah', 'Alasan Paket Bermasalah', 'Waktu Scan Inventory', 'Waktu TTD',
       'TTD Retur', 'DP TTD', 'Sprinter TTD', 'Tujuan', 'COD'];
     const det = o => [o.awb, o.dp, o.kode, o.nama, o.waktuDel, o.bm, o.alasanBm, o.inv, o.ttd, o.ttdRetur, o.dpTtd, o.sprTtd, o.tujuan, o.cod];
+    sheet('AWB Tidak Scan Bermasalah', hDet, hasil.noBm.map(det));
     sheet('AWB Tidak Scan Inventori', hDet, hasil.noInv.map(det));
-    sheet('AWB Gagal Tanpa Bermasalah', hDet, hasil.noBm.map(det));
 
     sheet('Definisi', ['Kolom', 'Definisi'], [
       ['Total Delivery', 'Jumlah AWB yang di-scan delivery oleh sprinter'],
       ['Total TTD', 'AWB TTD oleh penerima (Waktu TTD ada & TTD Retur = 0). TTD Retur = 1 tidak dihitung (itu TTD retur di pengirim)'],
-      ['Total Scan Bermasalah', 'AWB yang punya Waktu Paket Bermasalah'],
-      ['Total Scan Inventori', 'AWB yang punya Waktu Scan Inventory'],
-      ['Total AWB Tidak Scan Inventori', 'AWB tidak TTD (retur / belum TTD) yang TIDAK punya scan inventori (seharusnya kembali ke gudang & di-scan inventori)'],
+      ['Wajib Scan', 'Total Delivery - Total TTD = AWB yang wajib scan bermasalah dan wajib scan inventori'],
+      ['Total Scan Bermasalah', 'AWB wajib scan yang punya Waktu Paket Bermasalah'],
+      ['Total AWB Tidak Scan Bermasalah', 'AWB wajib scan yang TIDAK punya Waktu Paket Bermasalah (Scan Bermasalah + Tidak Scan Bermasalah = Delivery - TTD)'],
+      ['Total Scan Inventori', 'AWB wajib scan yang punya Waktu Scan Inventory'],
+      ['Total AWB Tidak Scan Inventori', 'AWB wajib scan yang TIDAK punya Waktu Scan Inventory (Scan Inventori + Tidak Scan Inventori = Delivery - TTD)'],
       ['Sumber', namaSumber + ' | Tanggal delivery: ' + hasil.tgl.join(', ')]
     ], { 1: 110 });
 

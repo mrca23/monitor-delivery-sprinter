@@ -60,7 +60,7 @@
 <body>
 <main>
   <h1>Report Sprinter Delivery</h1>
-  <p class="sub">Rekap per sprinter dari export JMS <em>Monitor Delivery (Refine)(Detail)</em>: total delivery, TTD, scan bermasalah, scan inventori, dan AWB tidak scan inventori.</p>
+  <p class="sub">Rekap per sprinter dari export JMS <em>Monitor Delivery (Refine)(Detail)</em>: total delivery, TTD, serta AWB yang sudah dan belum scan bermasalah / scan inventori.</p>
 
   <section class="card">
     <div class="drop" id="drop">
@@ -88,10 +88,13 @@
       <ul>
         <li><b>Total Delivery</b>: jumlah AWB yang di-scan delivery oleh sprinter.</li>
         <li><b>Total TTD</b>: AWB TTD oleh penerima (Waktu TTD ada dan TTD Retur = 0). TTD Retur = 1 tidak dihitung karena itu TTD retur di pengirim.</li>
-        <li><b>Total Scan Bermasalah</b>: AWB yang punya Waktu Paket Bermasalah.</li>
-        <li><b>Total Scan Inventori</b>: AWB yang punya Waktu Scan Inventory.</li>
-        <li><b>Total AWB Tidak Scan Inventori</b>: AWB yang tidak TTD (retur atau belum TTD) dan tidak punya scan inventori.</li>
-        <li>File Excel berisi sheet: Report Sprinter, AWB Tidak Scan Inventori, AWB Gagal Tanpa Bermasalah, Definisi.</li>
+        <li><b>Wajib scan</b> = Total Delivery - Total TTD. AWB ini wajib scan bermasalah dan wajib scan inventori.</li>
+        <li><b>Total Scan Bermasalah</b>: AWB wajib scan yang punya Waktu Paket Bermasalah.</li>
+        <li><b>Total AWB Tidak Scan Bermasalah</b>: AWB wajib scan tanpa Waktu Paket Bermasalah.</li>
+        <li><b>Total Scan Inventori</b>: AWB wajib scan yang punya Waktu Scan Inventory.</li>
+        <li><b>Total AWB Tidak Scan Inventori</b>: AWB wajib scan tanpa Waktu Scan Inventory.</li>
+        <li>Scan + Tidak Scan selalu sama dengan Total Delivery - Total TTD.</li>
+        <li>File Excel berisi sheet: Report Sprinter, AWB Tidak Scan Bermasalah, AWB Tidak Scan Inventori, Definisi.</li>
       </ul>
     </details>
   </section>
@@ -114,18 +117,18 @@
     const t = hasil.total;
     $('judul').textContent = 'Hasil: ' + hasil.rep.length + ' sprinter, delivery ' + hasil.tgl.join(', ');
     $('kpi').innerHTML = [
-      ['Total Delivery', t.del], ['Total TTD', t.ttd], ['Scan Bermasalah', t.bm],
+      ['Total Delivery', t.del], ['Total TTD', t.ttd], ['Scan Bermasalah', t.bm], ['Tidak Scan Bermasalah', t.noBm],
       ['Scan Inventori', t.inv], ['Tidak Scan Inventori', t.noInv]
     ].map(([l, v]) => '<div><small>' + l + '</small><b>' + fmt(v) + '</b></div>').join('');
     const head = '<tr><th>No</th><th>DP Delivery</th><th>Kode Sprinter</th><th>Sprinter Delivery</th>' +
-      '<th class="n">Total Delivery</th><th class="n">Total TTD</th><th class="n">Scan Bermasalah</th>' +
+      '<th class="n">Total Delivery</th><th class="n">Total TTD</th><th class="n">Scan Bermasalah</th><th class="n">Tidak Scan Bermasalah</th>' +
       '<th class="n">Scan Inventori</th><th class="n">Tidak Scan Inventori</th></tr>';
     const body = hasil.rep.map((g, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(g.dp) + '</td><td>' + esc(g.kode) +
       '</td><td>' + esc(g.nama) + '</td><td class="n">' + fmt(g.del) + '</td><td class="n">' + fmt(g.ttd) +
-      '</td><td class="n">' + fmt(g.bm) + '</td><td class="n">' + fmt(g.inv) + '</td><td class="n' +
+      '</td><td class="n">' + fmt(g.bm) + '</td><td class="n' + (g.noBm > 0 ? ' merah' : '') + '">' + fmt(g.noBm) + '</td><td class="n">' + fmt(g.inv) + '</td><td class="n' +
       (g.noInv > 0 ? ' merah' : '') + '">' + fmt(g.noInv) + '</td></tr>').join('');
     const total = '<tr class="total"><td></td><td>TOTAL</td><td></td><td></td><td class="n">' + fmt(t.del) +
-      '</td><td class="n">' + fmt(t.ttd) + '</td><td class="n">' + fmt(t.bm) + '</td><td class="n">' + fmt(t.inv) +
+      '</td><td class="n">' + fmt(t.ttd) + '</td><td class="n">' + fmt(t.bm) + '</td><td class="n">' + fmt(t.noBm) + '</td><td class="n">' + fmt(t.inv) +
       '</td><td class="n">' + fmt(t.noInv) + '</td></tr>';
     $('tabel').innerHTML = '<thead>' + head + '</thead><tbody>' + body + total + '</tbody>';
     $('hasil').hidden = false;
